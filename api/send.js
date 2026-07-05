@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const path = require('path');
 
 const transporter = nodemailer.createTransport({
   host:   'mail.growid.ai',
@@ -75,6 +76,22 @@ module.exports = async function handler(req, res) {
     message || '—'
   ].join('\n');
 
+  const confirmHtml = `
+    <div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;color:#222;max-width:520px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
+      <div style="background:#07070D;padding:28px 32px;text-align:center;border-bottom:2px solid #7B5CF5;">
+        <img src="cid:logo" alt="Growid.AI" style="height:56px;display:block;margin:0 auto;">
+      </div>
+      <div style="padding:32px;background:#ffffff;text-align:right;">
+        <p style="font-size:17px;margin:0 0 12px;">שלום ${firstName},</p>
+        <p style="margin:0 0 16px;">תודה על פנייתך נחזור אלייך בהקדם.</p>
+        <div style="margin-top:36px;padding-top:20px;border-top:1px solid #e8e8e8;text-align:right;">
+          <p style="margin:0 0 4px;font-size:15px;color:#222;font-weight:600;">צוות growid</p>
+          <p style="margin:0;font-size:12px;color:#888;">מגדירים מחדש יעילות עסקית בעידן ה-AI</p>
+        </div>
+      </div>
+    </div>
+  `;
+
   try {
     await transporter.sendMail({
       from:    '"Growid Landing" <landing@growid.ai>',
@@ -83,6 +100,18 @@ module.exports = async function handler(req, res) {
       subject: 'Growid - Contact from landing page',
       text:    textBody,
       html:    htmlBody
+    });
+
+    await transporter.sendMail({
+      from:        '"Growid.AI" <landing@growid.ai>',
+      to:          email,
+      subject:     'Growid.ai - פנייתך התקבלה',
+      html:        confirmHtml,
+      attachments: [{
+        filename: 'logo.png',
+        path:     path.join(__dirname, '../public/growid-assets/logo.png'),
+        cid:      'logo'
+      }]
     });
 
     return res.status(200).json({ ok: true });
